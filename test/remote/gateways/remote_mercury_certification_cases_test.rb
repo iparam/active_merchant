@@ -15,7 +15,7 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
 
     @options = {
       :order_id => "1",
-      :description => "ActiveMerchant"
+      :description => "Shopify"
     }
     @options_with_billing = @options.merge(
       :merchant => '999',
@@ -156,38 +156,15 @@ class RemoteMercuryCertificationTest < Test::Unit::TestCase
     assert_success void
   end
 
-  def test_5911
-    @credit_card = credit_card("5439750001500248", :verification_value => "123")
-    @options_with_billing = @options.merge(
-      :merchant => '999',
-      :billing_address => {
-        :address1 => '4 Corporate SQ ',
-        :zip => '30329'
-      }
-    )
-    response = @gateway.purchase(110, @credit_card, @options_with_billing)
+  def test_successful_authorize_and_capture_with_track
+    response = @gateway.authorize(300, @credit_card_track_data, @options)
     assert_success response
+    assert_equal '3.00', response.params['authorize']
 
-    void = @gateway.void(response.authorization, @options.merge(:try_reversal => true))
-    assert_success void
+    capture = @gateway.capture(nil, response.authorization, @options)
+    assert_success capture
+    assert_equal '3.00', capture.params['authorize']
   end
-
-  def test_512514
-    @credit_card = credit_card("373953244361001", :verification_value => "1234")
-    @options_with_billing = @options.merge(
-      :merchant => '999',
-      :billing_address => {
-        :address1 => '123 St. ABC',
-        :zip => '85016'
-      }
-    )
-    response = @gateway.purchase(108, @credit_card, @options_with_billing)
-    assert_success response
-
-    void = @gateway.void(response.authorization, @options.merge(:try_reversal => true))
-    assert_success void
-  end
-
 
 
 end
